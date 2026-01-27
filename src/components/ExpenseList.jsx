@@ -1,74 +1,84 @@
-import { Edit2, Trash2 } from "lucide-react";
-import { formatCurrency } from "../utils/format";
+import api from "../services/api";
+import StatusBadge from "./StatusBadge";
 
-function ExpenseList({ expenses, onEdit, onDelete }) {
+export default function ExpenseList({ expenses, role, onAction }) {
+  if (expenses.length === 0) {
+    return (
+      <p className="text-gray-500">
+        No expenses recorded yet.
+      </p>
+    );
+  }
+
+  const handleApprove = async (id) => {
+    await api.patch(`/expenses/${id}/approve`);
+    onAction();
+  };
+
+  const handleReject = async (id) => {
+    await api.patch(`/expenses/${id}/reject`);
+    onAction();
+  };
+
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6 flex flex-col">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-bold">Recent Activity</h3>
-        <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400 cursor-pointer hover:underline">
-          View All
-        </span>
-      </div>
+    <div className="overflow-x-auto">
+      <table className="min-w-full bg-white dark:bg-gray-800 rounded shadow">
+        <thead>
+          <tr className="text-left border-b dark:border-gray-700">
+            <th className="p-3">Category</th>
+            <th className="p-3">Amount</th>
+            <th className="p-3">Status</th>
+            <th className="p-3">Date</th>
+            {role === "MANAGER" && (
+              <th className="p-3">Actions</th>
+            )}
+          </tr>
+        </thead>
 
-      <div className="flex-1 overflow-y-auto max-h-[400px] space-y-4 pr-2 custom-scrollbar">
-        {expenses.length === 0 && (
-          <p className="text-center text-slate-500 py-10">
-            No expenses recorded yet.
-          </p>
-        )}
+        <tbody>
+          {expenses.map((e) => (
+            <tr
+              key={e.id}
+              className="border-b dark:border-gray-700"
+            >
+              <td className="p-3">{e.category}</td>
+              <td className="p-3">₹{e.amount}</td>
+              <td className="p-3">
+                <StatusBadge status={e.status} />
+              </td>
+              <td className="p-3">
+                {new Date(e.created_at).toLocaleDateString()}
+              </td>
 
-        {expenses.map((e) => (
-          <div
-            key={e.id}
-            className="group flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent hover:border-slate-100 dark:hover:border-slate-700 transition-all"
-          >
-            {/* Left */}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 flex-shrink-0">
-                <span className="text-sm font-bold">
-                  {e.category.charAt(0).toUpperCase()}
-                </span>
-              </div>
+              {role === "MANAGER" && (
+                <td className="p-3 space-x-2">
+                  {e.status === "PENDING" && (
+                    <>
+                      <button
+                        onClick={() => handleApprove(e.id)}
+                        className="px-2 py-1 text-sm rounded
+                                   bg-green-600 hover:bg-green-700
+                                   text-white"
+                      >
+                        Approve
+                      </button>
 
-              <div className="min-w-0">
-                <p className="font-medium truncate">
-                  {e.category}
-                </p>
-                <p className="text-xs text-slate-400">
-                  {new Date().toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-
-            {/* Right */}
-            <div className="flex items-center gap-3 sm:gap-4">
-              <span className="font-semibold whitespace-nowrap">
-                {formatCurrency(e.amount)}
-              </span>
-
-              {/* Mobile always visible, desktop on hover */}
-              <div className="flex gap-1 sm:gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                <button
-                  onClick={() => onEdit(e)}
-                  className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-md transition-colors"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-
-                <button
-                  onClick={() => onDelete(e.id)}
-                  className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+                      <button
+                        onClick={() => handleReject(e.id)}
+                        className="px-2 py-1 text-sm rounded
+                                   bg-red-600 hover:bg-red-700
+                                   text-white"
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
+                </td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
-
-export default ExpenseList;

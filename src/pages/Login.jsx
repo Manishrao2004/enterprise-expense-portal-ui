@@ -1,177 +1,102 @@
 import { useState } from "react";
-import api from "../services/api";
-import toast from "react-hot-toast";
-import { LayoutDashboard, LogIn } from "lucide-react";
-import { Link } from "react-router-dom";
+import { loginUser } from "../services/api";
 
-function Login() {
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [error, setError] = useState("");
 
-  // ---------- Validation ----------
-  const validate = () => {
-    const newErrors = {};
-
-    if (!email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Enter a valid email address";
-    }
-
-    if (!password) {
-      newErrors.password = "Password is required";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // ---------- Submit ----------
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validate()) return;
+    setError("");
+    setLoading(true);
 
     try {
-      setLoading(true);
-
-      const res = await api.post("/login", {
-        email,
-        password,
-      });
-
-      localStorage.setItem("token", res.data.token);
-      toast.success("Welcome back 👋");
-
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 500);
+      await loginUser(email, password);
+      window.location.href = "/";
     } catch (err) {
-      toast.error(err.response?.data?.error || "Login failed");
+      setError("Invalid email or password");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center px-4">
-      {/* Card */}
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800">
+    <div className="min-h-screen flex items-center justify-center
+                    bg-gray-100 dark:bg-gray-900 px-4">
+      <div className="w-full max-w-md bg-white dark:bg-gray-800
+                      rounded-lg shadow-md p-6 sm:p-8">
         
-        {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="bg-indigo-600 p-2 rounded-lg">
-              <LayoutDashboard className="w-5 h-5 text-white" />
-            </div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-              FinTrack
-            </h1>
-          </div>
-          <p className="text-sm text-slate-500 mt-2">
-            Sign in to manage your expenses
-          </p>
-        </div>
+        <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100
+                       text-center mb-2">
+          Enterprise Expense Portal
+        </h1>
 
-        {/* Form */}
-        <form onSubmit={handleLogin} className="p-6 space-y-4">
-          
-          {/* Email */}
+        <p className="text-sm text-gray-500 dark:text-gray-400
+                      text-center mb-6">
+          Sign in with your corporate account
+        </p>
+
+        {error && (
+          <div className="mb-4 text-sm text-red-600 dark:text-red-400
+                          text-center">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium
+                              text-gray-700 dark:text-gray-300">
               Email
             </label>
             <input
               type="email"
-              className="
-                w-full px-4 py-3
-                bg-slate-50 dark:bg-slate-800
-                border border-slate-200 dark:border-slate-700
-                rounded-xl
-                text-slate-900 dark:text-slate-100
-                placeholder-slate-400 dark:placeholder-slate-500
-                focus:ring-2 focus:ring-indigo-500
-                outline-none transition-all
-              "
-              placeholder="you@example.com"
+              required
               value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setErrors((prev) => ({ ...prev, email: undefined }));
-              }}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 w-full rounded-md border
+                         border-gray-300 dark:border-gray-600
+                         bg-white dark:bg-gray-700
+                         text-gray-900 dark:text-gray-100
+                         px-3 py-2 focus:outline-none
+                         focus:ring-2 focus:ring-blue-500"
             />
-            {errors.email && (
-              <p className="text-sm text-red-500 mt-1">{errors.email}</p>
-            )}
           </div>
 
-          {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm font-medium
+                              text-gray-700 dark:text-gray-300">
               Password
             </label>
             <input
               type="password"
-              className="
-                w-full px-4 py-3
-                bg-slate-50 dark:bg-slate-800
-                border border-slate-200 dark:border-slate-700
-                rounded-xl
-                text-slate-900 dark:text-slate-100
-                placeholder-slate-400 dark:placeholder-slate-500
-                focus:ring-2 focus:ring-indigo-500
-                outline-none transition-all
-              "
-              placeholder="••••••••"
+              required
               value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setErrors((prev) => ({ ...prev, password: undefined }));
-              }}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 w-full rounded-md border
+                         border-gray-300 dark:border-gray-600
+                         bg-white dark:bg-gray-700
+                         text-gray-900 dark:text-gray-100
+                         px-3 py-2 focus:outline-none
+                         focus:ring-2 focus:ring-blue-500"
             />
-            {errors.password && (
-              <p className="text-sm text-red-500 mt-1">{errors.password}</p>
-            )}
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            className="
-              w-full flex items-center justify-center gap-2
-              px-4 py-3
-              bg-indigo-600 hover:bg-indigo-700
-              disabled:opacity-60 disabled:cursor-not-allowed
-              text-white rounded-xl font-medium
-              shadow-lg shadow-indigo-500/20
-              transition-all
-            "
+            className="w-full py-2 rounded-md
+                       bg-blue-600 hover:bg-blue-700
+                       text-white font-medium
+                       disabled:opacity-50
+                       transition-colors"
           >
-            <LogIn className="w-4 h-4" />
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? "Signing in..." : "Login"}
           </button>
         </form>
-
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 text-center">
-          <p className="text-sm text-slate-500">
-            Don’t have an account?{" "}
-            <Link
-              to="/register"
-              className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
-            >
-              Create one
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   );
 }
-
-export default Login;
